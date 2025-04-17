@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calculator-btn {
+            transition: all 0.2s ease;
+        }
+        .calculator-btn:active {
+            transform: scale(0.95);
+        }
+        .display {
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+        <!-- Display Section -->
+        <div class="p-4 bg-gray-800 text-right">
+            <div id="memory-indicator" class="text-gray-400 text-sm h-4"></div>
+            <div id="operation-display" class="text-gray-400 text-lg h-6 mb-1"></div>
+            <div id="main-display" class="text-white text-4xl font-semibold display">0</div>
+        </div>
+
+        <!-- Button Grid -->
+        <div class="grid grid-cols-5 gap-1 p-2 bg-gray-200">
+            <!-- Memory Functions -->
+            <button onclick="memoryClear()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">MC</button>
+            <button onclick="memoryRecall()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">MR</button>
+            <button onclick="memoryAdd()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">M+</button>
+            <button onclick="memorySubtract()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">M-</button>
+            <button onclick="clearAll()" class="calculator-btn bg-red-400 hover:bg-red-500 text-white p-4 rounded">AC</button>
+
+            <!-- Scientific Functions -->
+            <button onclick="addToDisplay('(')" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">(</button>
+            <button onclick="addToDisplay(')')" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">)</button>
+            <button onclick="percentage()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">%</button>
+            <button onclick="squareRoot()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">√</button>
+            <button onclick="clearEntry()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">CE</button>
+
+            <!-- Number Pad -->
+            <button onclick="addToDisplay('7')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">7</button>
+            <button onclick="addToDisplay('8')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">8</button>
+            <button onclick="addToDisplay('9')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">9</button>
+            <button onclick="setOperation('/')" class="calculator-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded">÷</button>
+            <button onclick="power()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">x^y</button>
+
+            <button onclick="addToDisplay('4')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">4</button>
+            <button onclick="addToDisplay('5')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">5</button>
+            <button onclick="addToDisplay('6')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">6</button>
+            <button onclick="setOperation('*')" class="calculator-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded">×</button>
+            <button onclick="factorial()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">x!</button>
+
+            <button onclick="addToDisplay('1')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">1</button>
+            <button onclick="addToDisplay('2')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">2</button>
+            <button onclick="addToDisplay('3')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">3</button>
+            <button onclick="setOperation('-')" class="calculator-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded">-</button>
+            <button onclick="logarithm()" class="calculator-btn bg-gray-300 hover:bg-gray-400 p-4 rounded">log</button>
+
+            <button onclick="addToDisplay('0')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded col-span-2">0</button>
+            <button onclick="addToDisplay('.')" class="calculator-btn bg-white hover:bg-gray-100 p-4 rounded">.</button>
+            <button onclick="setOperation('+')" class="calculator-btn bg-blue-400 hover:bg-blue-500 text-white p-4 rounded">+</button>
+            <button onclick="calculate()" class="calculator-btn bg-green-500 hover:bg-green-600 text-white p-4 rounded">=</button>
+        </div>
+    </div>
+
+    <script>
+        // Calculator state
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let memoryValue = 0;
+        let resetInput = false;
+
+        // DOM elements
+        const mainDisplay = document.getElementById('main-display');
+        const operationDisplay = document.getElementById('operation-display');
+        const memoryIndicator = document.getElementById('memory-indicator');
+
+        // Update display
+        function updateDisplay() {
+            mainDisplay.textContent = currentInput;
+            operationDisplay.textContent = previousInput + (operation ? ' ' + operation : '');
+            memoryIndicator.textContent = memoryValue !== 0 ? 'M' : '';
+        }
+
+        // Add to display
+        function addToDisplay(value) {
+            if (currentInput === '0' || resetInput) {
+                currentInput = value;
+                resetInput = false;
+            } else {
+                currentInput += value;
+            }
+            updateDisplay();
+        }
+
+        // Clear entry
+        function clearEntry() {
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        // Clear all
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            updateDisplay();
+        }
+
+        // Set operation
+        function setOperation(op) {
+            if (operation !== null) calculate();
+            previousInput = currentInput;
+            operation = op;
+            resetInput = true;
+            updateDisplay();
+        }
+
+        // Calculate result
+        function calculate() {
+            if (operation === null || resetInput) return;
+            
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+            
+            switch (operation) {
+                case '+': result = prev + current; break;
+                case '-': result = prev - current; break;
+                case '*': result = prev * current; break;
+                case '/': result = prev / current; break;
+                case '^': result = Math.pow(prev, current); break;
+                default: return;
+            }
+            
+            currentInput = result.toString();
+            operation = null;
+            previousInput = '';
+            resetInput = true;
+            updateDisplay();
+        }
+
+        // Memory functions
+        function memoryClear() {
+            memoryValue = 0;
+            updateDisplay();
+        }
+
+        function memoryRecall() {
+            currentInput = memoryValue.toString();
+            updateDisplay();
+        }
+
+        function memoryAdd() {
+            memoryValue += parseFloat(currentInput);
+            updateDisplay();
+        }
+
+        function memorySubtract() {
+            memoryValue -= parseFloat(currentInput);
+            updateDisplay();
+        }
+
+        // Scientific functions
+        function percentage() {
+            currentInput = (parseFloat(currentInput) / 100).toString();
+            updateDisplay();
+        }
+
+        function squareRoot() {
+            currentInput = Math.sqrt(parseFloat(currentInput)).toString();
+            updateDisplay();
+        }
+
+        function power() {
+            previousInput = currentInput;
+            operation = '^';
+            resetInput = true;
+            updateDisplay();
+        }
+
+        function factorial() {
+            let num = parseInt(currentInput);
+            let result = 1;
+            for (let i = 2; i <= num; i++) {
+                result *= i;
+            }
+            currentInput = result.toString();
+            updateDisplay();
+        }
+
+        function logarithm() {
+            currentInput = Math.log10(parseFloat(currentInput)).toString();
+            updateDisplay();
+        }
+
+        // Initialize
+        updateDisplay();
+
+        // Event listeners for keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') addToDisplay(e.key);
+            else if (e.key === '.') addToDisplay('.');
+            else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                setOperation(e.key);
+            }
+            else if (e.key === 'Enter' || e.key === '=') calculate();
+            else if (e.key === 'Escape') clearAll();
+            else if (e.key === 'Backspace') {
+                currentInput = currentInput.slice(0, -1) || '0';
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
